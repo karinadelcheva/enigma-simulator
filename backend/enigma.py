@@ -316,10 +316,7 @@ class Enigma:
         """
         encoded_message = ""
         for c in message:
-            if c.isalpha():  # Only encode alphabet characters
-                encoded_message += str(self.encode_character(c.upper()))
-            else:
-                encoded_message += c  # Preserve non-alphabet characters
+            encoded_message += str(self.encode_character(c.upper()))
 
         return encoded_message
 
@@ -348,3 +345,7 @@ class Enigma:
         # This will trigger cascading rotation through notches
         # Note: the Rotor.rotate() method contains a check if the rotor type is a rotating rotor (I-V)
         self.input_ring.rotate()
+
+
+if __name__ == "__main__":
+   pass
