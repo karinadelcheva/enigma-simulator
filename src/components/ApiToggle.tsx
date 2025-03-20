@@ -2,7 +2,7 @@
 import React from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { Info } from 'lucide-react';
 import { 
   Tooltip,
   TooltipContent,
@@ -34,7 +34,7 @@ const ApiToggle: React.FC<ApiToggleProps> = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger>
-            <InfoCircledIcon className="h-4 w-4 text-enigma-accent cursor-help" />
+            <Info className="h-4 w-4 text-enigma-accent cursor-help" />
           </TooltipTrigger>
           <TooltipContent>
             <div className="max-w-xs">
