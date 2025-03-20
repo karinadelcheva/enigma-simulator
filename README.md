@@ -1,5 +1,6 @@
 
-# Enigma Machine Simulator
+# 🕵🏻‍♀️ Enigma Machine Simulator
+<img width="1438" alt="Screenshot 2025-03-20 at 19 28 52" src="https://github.com/user-attachments/assets/b83fe2cc-030a-4ade-b5dc-cd9426619ef3" />
 
 This project is a historically accurate recreation of the WWII Enigma cipher device, featuring both a frontend interface and a Python backend.
 
