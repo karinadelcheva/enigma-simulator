@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -96,6 +90,69 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-enigma-bg text-enigma-dark font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans tracking-tight;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-enigma-accent/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-enigma-accent/30;
+  }
+
+  /* Glass Morphism Effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-glass;
+  }
+
+  /* Rotor Effects */
+  .rotor-display {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+
+  .rotor-digit {
+    backface-visibility: hidden;
+    transform-origin: center center;
+  }
+
+  /* Keyboard Effects */
+  .key {
+    @apply transition-all duration-150 ease-in-out;
+  }
+
+  .key:active, .key.active {
+    @apply transform scale-95 shadow-inner;
+  }
+
+  /* Signal Path */
+  .signal-path {
+    @apply opacity-0;
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+    transition: stroke-dashoffset 0.5s ease-out, opacity 0.3s ease-out;
+  }
+
+  .signal-path.active {
+    @apply opacity-100;
+    stroke-dashoffset: 0;
   }
 }
