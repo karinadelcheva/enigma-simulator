@@ -7,9 +7,11 @@ import EnigmaSettings from '../components/EnigmaSettings';
 import PlugboardDisplay from '../components/PlugboardDisplay';
 import InfoPanel from '../components/InfoPanel';
 import NavBar from '../components/NavBar';
-import { Trash2, Copy, ArrowRight } from 'lucide-react';
+import ApiToggle from '../components/ApiToggle';
+import { Trash2, Copy, ArrowRight, ServerCrash } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useToast } from '../hooks/use-toast';
+import { createEnigma, encodeMessage, resetEnigma } from '../services/enigmaApi';
 
 const Index = () => {
   // Initialize enigma configuration state
@@ -31,19 +33,98 @@ const Index = () => {
   const [inputKey, setInputKey] = useState<string | null>(null);
   const [outputKey, setOutputKey] = useState<string | null>(null);
   
+  // API mode toggle
+  const [useBackend, setUseBackend] = useState<boolean>(false);
+  const [sessionId, setSessionId] = useState<string>('default');
+  const [apiError, setApiError] = useState<string | null>(null);
+  
   // Toast notifications
   const { toast } = useToast();
   
+  // Initialize API session when toggling to backend mode
+  useEffect(() => {
+    if (useBackend) {
+      initializeBackend();
+    }
+  }, [useBackend]);
+  
+  // Initialize the backend API
+  const initializeBackend = async () => {
+    try {
+      setApiError(null);
+      // Convert frontend config to backend format
+      const backendConfig = {
+        rotor_sequence: config.rotors.map(r => r.type).reverse(), // Reverse to match Python API
+        reflector: config.reflector === 'UKW_B' ? 'B' : config.reflector, // Convert reflector name
+        ring_setting: config.rotors.map(r => r.ringSetting + 1).reverse(), // API uses 1-26 format
+        initial_positions: config.rotors.map(r => String.fromCharCode(65 + r.position)).reverse().join(''),
+        plug_combinations: config.plugboard.map(p => p.from + p.to)
+      };
+      
+      const response = await createEnigma(backendConfig);
+      setSessionId(response.session_id);
+      
+      // Clear the text when switching modes
+      setInputText('');
+      setOutputText('');
+      
+      toast({
+        title: "Connected to Python Backend",
+        description: "Now using the Python Enigma implementation",
+      });
+    } catch (error) {
+      console.error("Failed to initialize backend:", error);
+      setApiError("Failed to connect to Python backend. Make sure the server is running at http://localhost:5000");
+      setUseBackend(false);
+      
+      toast({
+        variant: "destructive",
+        title: "Backend Connection Failed",
+        description: "Failed to connect to Python backend. Using frontend implementation instead.",
+      });
+    }
+  };
+  
   // Handle letter input
-  const handleKeyPress = (letter: string) => {
+  const handleKeyPress = async (letter: string) => {
     // Only process A-Z
     if (!/^[A-Z]$/.test(letter)) return;
     
     // Animate the input key
     setInputKey(letter);
     
-    // Process through enigma
-    const encoded = enigmaRef.current.encodeChar(letter);
+    let encoded: string;
+    
+    if (useBackend) {
+      try {
+        setApiError(null);
+        const response = await encodeMessage({
+          session_id: sessionId,
+          message: letter
+        });
+        
+        encoded = response.encoded;
+        
+        // Update rotor positions from backend (if needed)
+        // This would require additional state management
+      } catch (error) {
+        console.error("Backend encoding error:", error);
+        setApiError("Failed to encode with backend. Check if the server is running.");
+        setUseBackend(false);
+        
+        // Fallback to frontend implementation
+        encoded = enigmaRef.current.encodeChar(letter);
+        
+        toast({
+          variant: "destructive",
+          title: "Backend Error",
+          description: "Switched to frontend implementation due to backend error",
+        });
+      }
+    } else {
+      // Process through frontend enigma
+      encoded = enigmaRef.current.encodeChar(letter);
+    }
     
     // Animate the output key
     setOutputKey(encoded);
@@ -60,7 +141,7 @@ const Index = () => {
   };
 
   // Reset the machine and clear text
-  const handleReset = () => {
+  const handleReset = async () => {
     // Reset to default configuration
     const defaultConfig = EnigmaMachine.createDefaultConfig();
     setConfig(defaultConfig);
@@ -68,6 +149,15 @@ const Index = () => {
     // Clear text
     setInputText('');
     setOutputText('');
+    
+    if (useBackend) {
+      try {
+        await resetEnigma(sessionId);
+      } catch (error) {
+        console.error("Failed to reset backend:", error);
+        setApiError("Failed to reset backend Enigma machine");
+      }
+    }
     
     toast({
       title: "Machine Reset",
@@ -100,6 +190,11 @@ const Index = () => {
       ...prev,
       rotors: newRotors
     }));
+    
+    // If using backend, re-initialize with new config
+    if (useBackend) {
+      initializeBackend();
+    }
   };
   
   // Handle plugboard changes
@@ -108,6 +203,11 @@ const Index = () => {
       ...prev,
       plugboard: connections
     }));
+    
+    // If using backend, re-initialize with new config
+    if (useBackend) {
+      initializeBackend();
+    }
   };
 
   // Create a map of plugboard connections for the keyboard
@@ -122,6 +222,20 @@ const Index = () => {
       <NavBar />
       
       <main className="flex-grow container mx-auto px-4 py-8">
+        <div className="flex justify-end mb-4">
+          <ApiToggle 
+            useBackend={useBackend} 
+            onToggle={setUseBackend} 
+          />
+        </div>
+        
+        {apiError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 flex items-center">
+            <ServerCrash className="w-5 h-5 mr-2" />
+            <span>{apiError}</span>
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Rotor display row */}
           <div className="col-span-1 lg:col-span-3 flex flex-wrap justify-center gap-4 animate-slide-in">
