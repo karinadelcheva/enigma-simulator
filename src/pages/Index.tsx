@@ -74,13 +74,13 @@ const Index = () => {
       });
     } catch (error) {
       console.error("Failed to initialize backend:", error);
-      setApiError("Failed to connect to Python backend. Make sure the server is running at http://localhost:5000");
+      // Silently fall back to frontend implementation without showing error message
       setUseBackend(false);
       
       toast({
         variant: "destructive",
         title: "Backend Connection Failed",
-        description: "Failed to connect to Python backend. Using frontend implementation instead.",
+        description: "Using frontend implementation instead.",
       });
     }
   };
@@ -109,16 +109,14 @@ const Index = () => {
         // This would require additional state management
       } catch (error) {
         console.error("Backend encoding error:", error);
-        setApiError("Failed to encode with backend. Check if the server is running.");
+        // Silently fall back to frontend implementation
         setUseBackend(false);
-        
-        // Fallback to frontend implementation
         encoded = enigmaRef.current.encodeChar(letter);
         
         toast({
           variant: "destructive",
           title: "Backend Error",
-          description: "Switched to frontend implementation due to backend error",
+          description: "Switched to frontend implementation.",
         });
       }
     } else {
@@ -155,7 +153,8 @@ const Index = () => {
         await resetEnigma(sessionId);
       } catch (error) {
         console.error("Failed to reset backend:", error);
-        setApiError("Failed to reset backend Enigma machine");
+        // Don't show the error message to the user
+        setUseBackend(false);
       }
     }
     
@@ -229,12 +228,7 @@ const Index = () => {
           />
         </div>
         
-        {apiError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 flex items-center">
-            <ServerCrash className="w-5 h-5 mr-2" />
-            <span>{apiError}</span>
-          </div>
-        )}
+        {/* Remove the error message display */}
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Rotor display row */}
